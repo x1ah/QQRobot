@@ -5,6 +5,9 @@ import logging
 
 import requests
 
+import sys
+sys.path.insert(0, '../..')
+
 from config import STORE_LOG, LOG_NAME
 
 
@@ -12,7 +15,7 @@ def create_logger(log_name=LOG_NAME, store=STORE_LOG):
     logger = logging.getLogger("QQRobot")
     logger.setLevel(logging.INFO)
     stream = logging.StreamHandler()
-    steam.setLevel(logging.INFO)
+    stream.setLevel(logging.INFO)
     formatter = logging.Formatter('[%(levelname)s %(asctime)s] %(message)s')
     stream.setFormatter(formatter)
     logger.addHandler(stream)
