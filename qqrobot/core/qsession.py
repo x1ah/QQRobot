@@ -105,7 +105,10 @@ class BaseSession(object):
 
     def parse_poll_res(self, msg):
         if 'error' in msg:
-            return
+            if '103' in msg:
+                return ('请登录Web QQ确定能收到消息再重新启动', 0, '')
+            else:
+                return
         msg_dict = json.loads(msg)
         tmp_res = msg_dict.get('result')[0].get('value')
         msg_content = tmp_res.get('content')[-1]
@@ -122,7 +125,7 @@ class BaseSession(object):
                 "psessionid": self.psessionid,
                 "key": ''
             })}
-        poll_res = self.http.post(poll_url, data=form_data).text
+        poll_res = self.http.post(poll_url, data=form_data, timeout=30).text
         fmsg = self.parse_poll_res(poll_res) # 解析轮循结果
         # msg_pre_handle = self.msg_handle_map.get(fmsg[0])
         # if fmsg and msg_pre_handle: # 检查收到的消息是否注册，注册直接回复

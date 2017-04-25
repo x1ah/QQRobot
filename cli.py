@@ -15,9 +15,9 @@ def add(x, b):
     x + b
 
 
-@qqrobotMQ.task
-def async_send_msg(msg, from_uin, msg_type, *args, **kw):
-    bot.send_msg(msg, from_uin, msg_type, *args, **kw)
+# @qqrobotMQ.task
+# def async_send_msg(msg, from_uin, msg_type, *args, **kw):
+#     bot.send_msg(msg, from_uin, msg_type, *args, **kw)
 
 @bot.register_msg("test")
 def test():
@@ -27,7 +27,10 @@ def test():
 def test():
     return "Hello world!"
 
-print(bot.msg_handle_map)
+def async_send_msg(msg, from_uin, msg_type, *args, **kw):
+    Thread(target=bot.send_msg,
+           args=(msg, from_uin, msg_type, args, kw)).start()
+
 
 def run():
     global bot
@@ -49,7 +52,7 @@ def run():
     STOP = False
     IS_OPEN = True
     while not STOP:
-        time.sleep(0.5)
+        time.sleep(1)
         try:
             msg = bot.poll()
             if msg:
@@ -61,14 +64,14 @@ def run():
                 # send_status = bot.send_msg(msg, from_uin, msg_type)
                 # LOG.info('回复 {0}: {1}'.format(from_uin, send_status))
                 # async_send_msg.delay(msg_content, from_uin, msg_type)
-                Thread(target=bot.send_msg, args=(msg_content, from_uin, msg_type)).start()
+                async_send_msg(msg_content, from_uin, msg_type)
             elif 'STOP' in msg_content:
                 bot.log.info('CLOSE...')
-                bot.send_msg.delay('CLOSED', from_uin, msg_type)
+                async_send_msg('CLOSED', from_uin, msg_type)
                 IS_OPEN = False
             elif 'START' in msg_content:
-                LOG.info('STARTED')
-                bot.send_msg.delay('OPENED', from_uin, msg_type)
+                bot.log.info('STARTED')
+                async_send_msg('OPENED', from_uin, msg_type)
                 IS_OPEN = True
         except KeyboardInterrupt:
             bot.log.info('See You...')
