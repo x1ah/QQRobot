@@ -12,6 +12,7 @@ from .utils import HTTPRequest, create_logger, bknHash
 from .show_qrcode import QRcode
 #from celeryMQ.reuse_methods import task_method
 
+from .tulingapi import tuling
 
 class BaseSession(object):
     """提供封装后的Web QQ接口
@@ -139,6 +140,7 @@ class BaseSession(object):
         if msg_type == 'message':
             send_url = 'http://d1.web2.qq.com/channel/send_buddy_msg2'
             msg = self.msg_handle_map.get(msg, msg)
+            msg = tuling(msg,receive_id)
             form_data = {
                 'r': json.dumps({
                     'to': receive_id,
