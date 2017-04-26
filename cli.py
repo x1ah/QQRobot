@@ -38,7 +38,7 @@ def run():
     bot.get_QRcode()
     IS_LOGIN = False
     while not IS_LOGIN:
-        time.sleep(1)
+        time.sleep(1.5)
         res = bot.is_login().split(',')[-2]
         bot.log.info(res)
         IS_LOGIN = True if '登录成功' in res else False
