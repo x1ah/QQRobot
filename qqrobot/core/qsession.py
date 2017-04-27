@@ -12,7 +12,7 @@ from .utils import HTTPRequest, create_logger, bknHash
 from .show_qrcode import QRcode
 #from celeryMQ.reuse_methods import task_method
 
-from .tulingapi import tuling
+from .tulingapi import tuling,robot_name
 
 class BaseSession(object):
     """提供封装后的Web QQ接口
@@ -112,6 +112,10 @@ class BaseSession(object):
         msg_content = tmp_res.get('content')[-1]
         from_uin = tmp_res.get('from_uin')
         msg_type = msg_dict.get('result')[0].get('poll_type')
+        if msg_type == 'group_message':
+            msg_group = tmp_res.get('group_code')
+            msg_sender = tmp_res.get('send_uin')
+            return (msg_content, msg_group, msg_type)
         return (msg_content, from_uin, msg_type)
 
     def poll(self):
@@ -129,7 +133,7 @@ class BaseSession(object):
         # if fmsg and msg_pre_handle: # 检查收到的消息是否注册，注册直接回复
         #     self.send_msg.delay(msg=msg_pre_handle, receive_id=fmsg[1], msg_type=fmsg[2])
         if fmsg:
-            self.log.info("{0} 发来一条消息: {1}".format(fmsg[1], fmsg[0]))
+            self.log.info("{0}的{1} 发来一条消息: {2}".format(fmsg[1], fmsg[2], fmsg[0]))
         #     self.log.info("回复{0}: {1}".format(fmsg[1], msg_pre_handle))
         #     return None
         # else:
@@ -137,10 +141,10 @@ class BaseSession(object):
         return fmsg
 
     def send_msg(self, msg, receive_id, msg_type, *args, **kw):
+        msg = self.msg_handle_map.get(msg, msg)
+        msg = tuling(msg,receive_id)
         if msg_type == 'message':
             send_url = 'http://d1.web2.qq.com/channel/send_buddy_msg2'
-            msg = self.msg_handle_map.get(msg, msg)
-            msg = tuling(msg,receive_id)
             form_data = {
                 'r': json.dumps({
                     'to': receive_id,
@@ -160,7 +164,26 @@ class BaseSession(object):
             return send_res
         else:
             # TODO: 根据消息类型分类处理
-            return 'No Action'
+            #添加对群消息的回复
+            if msg_type == 'group_message':
+                send_url = 'http://d1.web2.qq.com/channel/send_qun_msg2'
+                form_data = {
+                    'r': json.dumps({
+                        'group_uin': receive_id,
+                        'content': json.dumps(
+                            [msg,
+                                ["font", {'name': "宋体", "size": 10,
+                                          "style": [0,0,0], "color": "000000"}
+                                ]]),
+                        'face':729,
+                        'clientid': 53999199,
+                        'msg_id': 34220099,
+                        'psessionid': self.psessionid
+                    })
+                }
+                send_res = self.http.post(send_url, data=form_data).text
+                self.log.info("回复{0}: {1}".format(receive_id, msg))
+            return send_res
 
     def register_msg(self, msg, type='message'):
         """提供消息注册
