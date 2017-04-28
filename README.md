@@ -17,12 +17,12 @@ from qqrobot import bot, run
 
 # 注册消息，函数返回值即为回复
 @bot.register_msg("这里是收到的消息内容")
-def hello():
+def hello(msg):
     return "返回值即为回复"
 
 # 如，对别人发过来的 hello 要回复 hello world，可以这么做
 @bot.register_msg('hello')
-def reply():
+def reply(msg):
     return "hello world"
 
 
