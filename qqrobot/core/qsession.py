@@ -20,6 +20,7 @@ class BaseSession(object):
         self.http = HTTPRequest()
         self.log = create_logger()
         self.msg_handle_map = {}
+        self.psessionid = None
 
     def get_QRcode(self):
         QRcode_url = (
@@ -30,7 +31,8 @@ class BaseSession(object):
         with open("./QRcode.png", 'wb') as qrcode:
             qrcode.write(response)
 
-        # TODO: async run
+        # TODO:
+        #   [ ] async run
         QRcode("./QRcode.png").show()
         os.remove('./QRcode.png')
 
@@ -55,7 +57,8 @@ class BaseSession(object):
         )
         response = self.http.get(url).text
         self.Ptwebqq_url = response.split("','")[2]
-        # TODO: 保存cookie至本地
+        # TODO:
+        #   [ ] 保存cookie至本地
 #        self.save_cookies()
         return response
 
@@ -127,21 +130,24 @@ class BaseSession(object):
             })}
         poll_res = self.http.post(poll_url, data=form_data, timeout=30).text
         fmsg = self.parse_poll_res(poll_res) # 解析轮循结果
-        # msg_pre_handle = self.msg_handle_map.get(fmsg[0])
-        # if fmsg and msg_pre_handle: # 检查收到的消息是否注册，注册直接回复
-        #     self.send_msg.delay(msg=msg_pre_handle, receive_id=fmsg[1], msg_type=fmsg[2])
         if fmsg:
             self.log.info("{0} 发来一条消息: {1}".format(fmsg[1], fmsg[0]))
-        #     self.log.info("回复{0}: {1}".format(fmsg[1], msg_pre_handle))
-        #     return None
-        # else:
-        #     return fmsg
         return fmsg
 
     def send_msg(self, msg, receive_id, msg_type, *args, **kw):
         if msg_type == 'message':
             send_url = 'http://d1.web2.qq.com/channel/send_buddy_msg2'
-            msg = self.msg_handle_map.get(msg, msg)
+            # TODO:
+            #   [x] 注册消息优先级，优先回复单独注册的消息内容
+            #   [ ] 添加正则匹配系统，注册消息可使用正则表达式
+            if msg in self.msg_handle_map.keys():
+                _tmp_func = self.msg_handle_map.get(msg)
+            else:
+                # 注册使用 ALL 即注册所有消息, 默认回复原消息
+                _tmp_func = self.msg_handle_map.get('ALL', (lambda x: x))
+            msg = (
+                lambda func, arg: func(arg)
+            )(_tmp_func, msg)
             form_data = {
                 'r': json.dumps({
                     'to': receive_id,
@@ -160,14 +166,22 @@ class BaseSession(object):
             self.log.info("回复{0}: {1}".format(receive_id, msg))
             return send_res
         else:
-            # TODO: 根据消息类型分类处理
+            # TODO:
+            #   [ ] 根据消息类型分类处理
             return 'No Action'
 
     def register_msg(self, msg, type='message'):
         """提供消息注册
+            提供 ALL 类型注册所有消息，即所有接收到的消息都会通过
+            ALL 的注册函数，除了单独注册的消息，如：
 
-            @bot.register("hello", type='message')
-            def hello():
+            @bot.register_msg("ALL")
+            def reply_any(msg):
+                # 所有消息都会经过 reply_any 函数处理后回复
+                return msg + "all append me"
+
+            @bot.register_msg("hello", type='message')
+            def hello(msg):
                 '''函数返回值即回复内容
                 '''
                 # some other action
@@ -177,8 +191,8 @@ class BaseSession(object):
         def handle(func):
             # @functools.wraps(func)
             # def wrap(*args, **kw):
-            # TODO: 更完善的消息处理机制
-            # 此处应该在send_msg 方法内处理回复，send_msg 为异步方法，优化性能
-            reply = func()
-            self.msg_handle_map[msg] = reply
+            # TODO:
+            #   [ ] 更完善的消息处理机制
+            # 此处应该在 send_msg 方法内处理回复，send_msg 为异步方法，优化性能
+            self.msg_handle_map[msg] = func
         return handle
