@@ -113,9 +113,13 @@ class BaseSession(object):
         from_uin = tmp_res.get('from_uin')
         msg_type = msg_dict.get('result')[0].get('poll_type')
         if msg_type == 'group_message':
-            msg_group = tmp_res.get('group_code')
-            msg_sender = tmp_res.get('send_uin')
-            return (msg_content, msg_group, msg_type)
+            name = robot_name()
+            if name in msg_content:
+                msg_group = tmp_res.get('group_code')
+                msg_sender = tmp_res.get('send_uin')
+                return (msg_content, msg_group, msg_type)
+            else:
+                return
         return (msg_content, from_uin, msg_type)
 
     def poll(self):
@@ -142,7 +146,7 @@ class BaseSession(object):
 
     def send_msg(self, msg, receive_id, msg_type, *args, **kw):
         msg = self.msg_handle_map.get(msg, msg)
-        msg = tuling(msg,receive_id)
+        msg = tuling(msg)
         if msg_type == 'message':
             send_url = 'http://d1.web2.qq.com/channel/send_buddy_msg2'
             form_data = {

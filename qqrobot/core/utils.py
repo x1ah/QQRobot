@@ -67,3 +67,4 @@ class HTTPRequest(object):
 
     def delete(self, *args, **kw):
         raise NotImplementedError
+

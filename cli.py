@@ -6,7 +6,9 @@ import time
 from threading import Thread
 
 from qqrobot.core.qsession import BaseSession
+from qqrobot.core.utils import ControlModel
 from celeryMQ.app import qqrobotMQ
+from qqrobot.core.ControlModel import keywords,control
 
 bot = BaseSession()
 
@@ -48,6 +50,7 @@ def run():
     bot.log.info('等待消息...')
     STOP = False
     IS_OPEN = True
+    control_key = False
     while not STOP:
         time.sleep(0.5)
         try:
@@ -56,6 +59,16 @@ def run():
                 msg_content, from_uin, msg_type = msg
             else:
                 continue
+            key_message = keywords()
+            print(control_key)
+            print('Hello')
+            print(key_message)
+            print(key_message in msg)
+            if key_message in msg:
+                print(control_key)
+                control_key = True
+                print(control_key)
+                break
             if (IS_OPEN is True) and ('STOP' not in msg_content):
                 # msg = "{0}[{1}]".format(SEND_MSG, random.randint(0, 10))
                 # send_status = bot.send_msg(msg, from_uin, msg_type)
@@ -75,6 +88,24 @@ def run():
             STOP = True
         except:
             bot.log.error(sys.exc_info())
+
+    while control_key:
+        time.sleep(0.5)
+        try:
+            msg = bot.poll()
+            if msg:
+                if msg[0] == '#':
+                    msg = msg[1:]
+                    control(msg)
+                else:
+                    print('Error use.')
+                    continue
+            else:
+                continue
+        except KeyboardInterrupt:
+            bot.log.info('Out of control...')
+            bot.log.info('See You...')
+            control_key = False
 
 
 if __name__ == "__main__":
