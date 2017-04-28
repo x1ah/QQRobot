@@ -3,7 +3,7 @@
 
 from celery import Celery
 
-qqrobotMQ = Celery('celeryMQ.app', include=['qqrobot.core.qsession'])
+qqrobotMQ = Celery('celeryMQ.app', include=[])
 
 qqrobotMQ.config_from_object('config.CeleryConfig')
 
