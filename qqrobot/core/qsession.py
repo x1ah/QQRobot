@@ -134,7 +134,7 @@ class BaseSession(object):
             self.log.info("{0} 发来一条消息: {1}".format(fmsg[1], fmsg[0]))
         return fmsg
 
-    def send_msg(self, msg, receive_id, msg_type, *args, **kw):
+    def send_msg(self, msg: str, receive_id: int, msg_type: str, *args, **kw) -> str:
         if msg_type == 'message':
             send_url = 'http://d1.web2.qq.com/channel/send_buddy_msg2'
             # TODO:
@@ -170,7 +170,7 @@ class BaseSession(object):
             #   [ ] 根据消息类型分类处理
             return 'No Action'
 
-    def register_msg(self, msg, type='message'):
+    def register_msg(self, msg: str, type='message'):
         """提供消息注册
             提供 ALL 类型注册所有消息，即所有接收到的消息都会通过
             ALL 的注册函数，除了单独注册的消息，如：
@@ -188,7 +188,7 @@ class BaseSession(object):
                 return "reply hello"
 
         """
-        def handle(func):
+        def handle(func) -> None:
             # @functools.wraps(func)
             # def wrap(*args, **kw):
             # TODO:
