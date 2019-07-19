@@ -3,7 +3,7 @@ aniso8601==1.2.0
 billiard==3.5.0.2
 celery==4.0.2
 click==6.7
-Flask==0.12.3
+Flask==1.0
 Flask-RESTful==0.3.5
 itsdangerous==0.24
 Jinja2==2.9.6
